@@ -1,5 +1,6 @@
 import * as esBuild from "esbuild-wasm";
 import { useEffect, useRef, useState } from "react";
+import { unpkgPathPlugin } from "./plugin/unpkg-path-plugin";
 
 function App() {
   const [input, setInput] = useState("");
@@ -19,27 +20,32 @@ function App() {
   };
 
   useEffect(() => {
-    startService();
+    startService().then((_) => {});
   }, []);
 
   const clickHandler = async () => {
     //* transpile and bundle the input
 
     if (!serviceRef.current) return;
-    const result = await serviceRef.current.transform(input, {
-      loader: "jsx",
-      target: "es2015",
+
+    // const result = await serviceRef.current.transform(input, {
+    //   loader: "jsx",
+    //   target: "es2015",
+    // });
+
+    const result = await esBuild.build({
+      entryPoints: ["index.js"],
+      bundle: true,
+      write: false,
+      plugins: [unpkgPathPlugin()],
     });
 
-    setCode(result.code);
+    setCode(result.outputFiles[0].text);
   };
 
   return (
     <div>
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      ></textarea>
+      <textarea value={input} onChange={(e) => setInput(e.target.value)} />
       <div>
         <button onClick={clickHandler}>Submit</button>
       </div>
